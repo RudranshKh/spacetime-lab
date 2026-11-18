@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spacetime Lab – Interactive General Relativity Simulator</title>
+<meta name="description" content="A 3D interactive simulator of Einstein’s general relativity: black holes, the solar system and custom objects, built with Three.js.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27><text y=%27.9em%27 font-size=%2790%27>🕳️</text></svg>">
+<style>
+:root{--bg:#05060f;--bg2:#0b0e1d;--card:rgba(255,255,255,.04);--line:rgba(255,255,255,.12);--text:#e9ecf8;--muted:#9aa3c2;--a:#ff8a3d;--b:#7c5cff;--c:#38d9a9;color-scheme:dark}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:70px}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+a{color:inherit}.wrap{max-width:1120px;margin:0 auto;padding:0 20px}
+nav{position:sticky;top:0;z-index:50;backdrop-filter:blur(12px);background:rgba(5,6,15,.72);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;align-items:center;justify-content:space-between;height:60px}
+.logo{font-weight:800;letter-spacing:.3px;text-decoration:none}.logo span{color:var(--a)}
+nav ul{display:flex;gap:22px;list-style:none;margin:0;padding:0}nav ul a{text-decoration:none;color:var(--muted);font-size:14px}nav ul a:hover{color:var(--text)}
+.hero{position:relative;overflow:hidden;padding:84px 0 70px;background:radial-gradient(900px 500px at 75% 30%,rgba(124,92,255,.28),transparent 60%),radial-gradient(700px 400px at 10% 80%,rgba(255,138,61,.16),transparent 60%)}
+.hero .wrap{display:grid;grid-template-columns:1.1fr .9fr;gap:30px;align-items:center}
+.tag{display:inline-block;font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--c);border:1px solid rgba(56,217,169,.4);border-radius:99px;padding:4px 12px}
+h1{font-size:clamp(34px,5.4vw,60px);line-height:1.08;margin:16px 0;letter-spacing:-1px}
+h1 em{font-style:normal;background:linear-gradient(90deg,var(--a),#ff4d8d,var(--b));-webkit-background-clip:text;background-clip:text;color:transparent}
+.lead{color:var(--muted);font-size:18px;max-width:560px}
+.cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:26px}
+.btn{display:inline-block;padding:12px 22px;border-radius:10px;text-decoration:none;font-weight:600;border:1px solid var(--line);transition:.2s}
+.btn.p{background:linear-gradient(135deg,var(--a),#ff4d8d);border-color:transparent;color:#fff}.btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(255,100,80,.25)}
+.bh{position:relative;width:min(78vw,380px);aspect-ratio:1;margin:auto}
+.bh i{position:absolute;inset:0;border-radius:50%}
+.bh .ring{background:conic-gradient(from 0deg,#ffd27a,#ff6a3d,#7c2cff,#ffd27a);-webkit-mask:radial-gradient(circle,transparent 36%,#000 38%,#000 62%,transparent 70%);mask:radial-gradient(circle,transparent 36%,#000 38%,#000 62%,transparent 70%);animation:spin 14s linear infinite;filter:blur(1px)}
+.bh .glow{background:radial-gradient(circle,transparent 30%,rgba(255,120,60,.35) 45%,transparent 70%)}
+.bh .core{inset:31%;background:#000;box-shadow:0 0 40px 8px rgba(255,90,40,.55),inset 0 0 20px #000}
+@keyframes spin{to{transform:rotate(360deg)}}
+.strip{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:-34px;position:relative;z-index:2}
+.strip div{background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:18px;text-align:center}.strip b{display:block;font-size:26px;color:var(--a)}.strip span{color:var(--muted);font-size:13px}
+section{padding:80px 0}section.alt{background:var(--bg2)}
+h2{font-size:clamp(26px,3.6vw,38px);margin:0 0 8px;letter-spacing:-.5px}.sub{color:var(--muted);max-width:680px;margin:0 0 30px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px;transition:.25s}.card:hover{border-color:rgba(255,138,61,.5);transform:translateY(-4px)}
+.card h3{margin:0 0 6px;font-size:18px}.card p{margin:0;color:var(--muted);font-size:14.5px}.ico{font-size:28px;margin-bottom:8px}
+.eq{font:600 17px/1.4 "Cambria Math",Cambria,Georgia,serif;color:#ffd9b8;background:rgba(0,0,0,.35);border-radius:10px;padding:10px 12px;margin:12px 0 8px;overflow-x:auto;white-space:nowrap}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line)}th{color:var(--muted);font-weight:600}.tw{overflow-x:auto;border:1px solid var(--line);border-radius:14px}
+.bhc{color:#ff6b6b;font-weight:700}
+ol.steps{padding-left:20px;color:var(--muted)}ol.steps li{margin:8px 0}ol.steps b{color:var(--text)}
+#stage{position:relative;height:min(80vh,740px);min-height:540px;border-radius:18px;overflow:hidden;border:1px solid var(--line);background:#04050c;box-shadow:0 20px 70px rgba(124,92,255,.18)}
+#stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+#fs{position:absolute;right:12px;top:12px;z-index:3;padding:7px 12px;border-radius:8px;border:1px solid var(--line);background:rgba(10,12,24,.7);color:var(--text);cursor:pointer}
+#chip{position:absolute;right:12px;bottom:12px;z-index:3;font-size:12px;color:var(--muted);background:rgba(10,12,24,.7);border:1px solid var(--line);border-radius:99px;padding:5px 12px;pointer-events:none}
+#ui{position:absolute;z-index:3;left:12px;top:12px;width:278px;max-height:calc(100% - 24px);overflow:auto;background:rgba(10,12,26,.82);backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:14px;padding:12px 14px;font-size:13px;line-height:1.4}
+#ui h3{margin:0;font-size:15px}#ui .sub{margin:0 0 6px;font-size:11.5px}
+#ui label{display:flex;justify-content:space-between;margin-top:8px;font-size:12px}#ui label b{color:var(--a);font-weight:600}
+#ui input[type=range]{width:100%;margin:2px 0 0;accent-color:var(--a)}
+#ui select{width:100%;margin-top:4px;padding:5px;border-radius:6px;border:1px solid var(--line);background:#10142b;color:var(--text)}
+#ui .row{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+#ui button{flex:1 1 auto;padding:6px 8px;border-radius:7px;border:1px solid var(--line);background:transparent;color:var(--text);cursor:pointer;font-size:12px}#ui button:hover{border-color:var(--a)}
+#ui .chk{display:flex;gap:6px;align-items:center;margin-top:10px}
+#hud{margin-top:10px;padding-top:8px;border-top:1px solid var(--line);font:11.5px/1.5 ui-monospace,Menlo,monospace;color:var(--muted);white-space:pre-line}
+#ui .hint{margin-top:8px;font-size:11px;color:var(--muted)}
+footer{padding:40px 0;border-top:1px solid var(--line);color:var(--muted);font-size:14px;text-align:center}
+.rv{opacity:0;transform:translateY(24px);transition:opacity .7s,transform .7s}.rv.in{opacity:1;transform:none}
+@media(max-width:820px){.hero .wrap{grid-template-columns:1fr}.bh{order:-1;width:min(60vw,260px)}nav ul{gap:14px}nav ul li:nth-child(n+4){display:none}.strip{grid-template-columns:1fr}}
+@media(max-width:700px){#stage{height:84vh}#ui{left:8px;right:8px;width:auto;top:auto;bottom:8px;max-height:46%}#fs{display:none}#chip{display:none}}
+@media(prefers-reduced-motion:reduce){.bh .ring{animation:none}.rv{transition:none}html{scroll-behavior:auto}}
+
+</style>
+</head><body>
+<nav><div class="wrap"><a class="logo" href="#top">Spacetime<span>Lab</span></a>
+<ul><li><a href="#simulator">Simulator</a></li><li><a href="#models">Models</a></li><li><a href="#theory">Theory</a></li><li><a href="#objects">Objects</a></li><li><a href="#about">About</a></li></ul></div></nav>
+
+<header class="hero" id="top"><div class="wrap">
+<div><span class="tag">Interactive · 3D · General Relativity</span>
+<h1>See gravity the way <em>Einstein</em> did.</h1>
+<p class="lead">Gravity isn’t a force pulling things together. It is the curvature of spacetime. Bend the fabric, launch planets and light, and watch black holes swallow them in real time.</p>
+<div class="cta"><a class="btn p" href="#simulator">Launch the simulator</a><a class="btn" href="#theory">Learn the theory</a></div></div>
+<div class="bh" aria-hidden="true"><i class="glow"></i><i class="ring"></i><i class="core"></i></div>
+</div></header>
+
+<div class="wrap strip rv"><div><b>3</b><span>models: black hole, solar system, custom</span></div><div><b>GR</b><span>Schwarzschild geodesics, not Newton</span></div><div><b>0</b><span>installs, it runs in your browser</span></div></div>
+
+<section id="simulator"><div class="wrap">
+<h2 class="rv">The simulator</h2><p class="sub rv">Drag to rotate. Click the glowing fabric to launch a planet or a ray of light. Click the canvas once to enable scroll-zoom.</p>
+<div id="stage" class="rv"><button id="fs" title="Toggle fullscreen">⛶ Fullscreen</button><div id="chip">Drag: rotate · Click fabric: launch</div>
+<div id="ui">
+<h3>Controls</h3>
+<div class="sub">Schwarzschild geometry · G = c = 1</div>
+<label>Model</label><select id="model"><option value="bh">Black hole</option><option value="sol">Solar system</option><option value="cus">Custom object (mass &amp; radius)</option></select>
+<div id="cust" style="display:none"><label>Preset</label><select id="pre"><option value="">Choose a preset…</option><option value="earth">Earth</option><option value="sun">Sun</option><option value="wd">White dwarf</option><option value="ns">Neutron star</option><option value="bh">10 M☉ squeezed into 10 km</option><option value="sgr">Sagittarius A*</option></select>
+<label>Mass (log scale) <b id="cmv"></b></label><input id="cm" type="range" min="-7" max="10" step=".05" value="0">
+<label>Radius (log scale) <b id="crv"></b></label><input id="cr" type="range" min="-6" max="9" step=".05" value="5.84">
+<div id="cres" style="margin-top:6px;font-size:12px;font-weight:600"></div></div>
+<div id="Mrow"><label>Black hole mass M <b id="Mv">1.0</b></label><input id="M" type="range" min="0.5" max="2" step="0.1" value="1"></div>
+<label>Click launches</label>
+<select id="mode"><option value="p">Planet (massive particle)</option><option value="l">Light ray (photon)</option></select>
+<label>Planet speed × circular <b id="vfv">1.00</b></label><input id="vf" type="range" min="0.3" max="1.4" step="0.01" value="1">
+<label>Light launch angle <b id="angv">12°</b></label><input id="ang" type="range" min="0" max="40" step="1" value="12">
+<label>Time speed <b id="tsv">2.0×</b></label><input id="ts" type="range" min="0.2" max="4" step="0.1" value="2">
+<div id="exrow" style="display:none"><label>Relativity exaggeration <b id="exv">×10^0</b></label><input id="ex" type="range" min="0" max="6" step=".5" value="0"></div>
+<div class="chk"><input id="gr" type="checkbox" checked><label for="gr" style="margin:0">Einstein (GR) correction on</label></div>
+<div class="row"><button id="b1">Eccentric orbit</button><button id="b2">Plunge</button><button id="b3">Light beam</button><button id="bp">Pause</button><button id="bu">Speed up latest</button><button id="bd">Slow down latest</button><button id="br">Reset</button><button id="bc">Clear</button></div>
+<div id="hud"></div>
+<div class="hint">Yellow ring: photon sphere. Green ring: innermost stable orbit. Red ring: event horizon.</div>
+</div>
+
+</div></div></section>
+
+<section class="alt" id="models"><div class="wrap"><h2 class="rv">Three models</h2><p class="sub rv">Pick one from the Model menu inside the simulator.</p>
+<div class="grid">
+<div class="card rv"><div class="ico">🕳️</div><h3>Black hole</h3><p>A non-rotating black hole with a glowing event horizon, photon sphere (yellow) and innermost stable orbit (green). Change its mass, fire light beams, watch planets precess, plunge and vanish at the horizon.</p></div>
+<div class="card rv"><div class="ico">☀️</div><h3>Solar system</h3><p>The Sun and all eight planets, with compressed distances. The Sun’s relativistic effects are tiny, so a slider exaggerates them to reveal Mercury-style precession.</p></div>
+<div class="card rv"><div class="ico">⚙️</div><h3>Custom object</h3><p>Choose any mass and radius. The simulator compares the radius with the Schwarzschild radius and turns it into a black hole, neutron star, white dwarf, star or planet automatically.</p></div>
+</div></div></section>
+
+<section id="theory"><div class="wrap"><h2 class="rv">The physics behind it</h2><p class="sub rv">The key results of general relativity that the simulator reproduces.</p>
+<div class="grid">
+<div class="card rv"><h3>Einstein field equations</h3><div class="eq">G<sub>μν</sub> = (8πG/c⁴) T<sub>μν</sub></div><p>Matter and energy tell spacetime how to curve; curved spacetime tells matter how to move.</p></div>
+<div class="card rv"><h3>Schwarzschild radius</h3><div class="eq">r<sub>s</sub> = 2GM / c²</div><p>The horizon radius. Squeeze any mass inside it and you get a black hole. The Sun’s is 2.95 km.</p></div>
+<div class="card rv"><h3>Orbital precession</h3><div class="eq">Δφ = 6πGM / (c² a (1−e²))</div><p>Elliptical orbits rotate each lap. This explains Mercury’s extra 43″ per century.</p></div>
+<div class="card rv"><h3>Light bending</h3><div class="eq">δ = 4GM / (c² b)</div><p>Twice the Newtonian value. Gravitational lensing confirmed it during the 1919 eclipse.</p></div>
+<div class="card rv"><h3>Time dilation</h3><div class="eq">dτ/dt = √(1 − r<sub>s</sub>/r)</div><p>Clocks run slower deeper in gravity, and stop at the horizon as seen from far away.</p></div>
+<div class="card rv"><h3>Orbit equation used</h3><div class="eq">a = −(GM/r³)(1 + 3L²/(c²r²)) r</div><p>The extra 3L² term is the general-relativistic correction. Switch it off in the simulator to get Newton’s closed ellipses.</p></div>
+</div></div></section>
+
+<section class="alt" id="objects"><div class="wrap"><h2 class="rv">What becomes a black hole?</h2><p class="sub rv">Try these presets in the Custom object model.</p>
+<div class="tw rv"><table><tr><th>Object</th><th>Mass</th><th>Radius</th><th>Schwarzschild radius</th><th>Result</th></tr>
+<tr><td>Earth</td><td>3×10⁻⁶ M☉</td><td>6,371 km</td><td>8.9 mm</td><td>Planet</td></tr>
+<tr><td>Sun</td><td>1 M☉</td><td>696,000 km</td><td>2.95 km</td><td>Star</td></tr>
+<tr><td>White dwarf</td><td>0.6 M☉</td><td>≈ 7,000 km</td><td>1.8 km</td><td>White dwarf</td></tr>
+<tr><td>Neutron star</td><td>1.4 M☉</td><td>≈ 12 km</td><td>4.1 km</td><td>Neutron star</td></tr>
+<tr><td>10 M☉ in 10 km</td><td>10 M☉</td><td>10 km</td><td>29.5 km</td><td class="bhc">Black hole</td></tr>
+<tr><td>Sagittarius A*</td><td>4.3×10⁶ M☉</td><td>—</td><td>12.7 million km</td><td class="bhc">Black hole</td></tr></table></div>
+<h2 class="rv" style="margin-top:50px">How to use it</h2>
+<ol class="steps rv"><li><b>Pick a model</b> from the menu in the simulator.</li><li><b>Click the fabric</b> to summon a planet. Adjust its launch speed first, or use <b>Speed up / Slow down latest</b> afterwards.</li><li><b>Switch to Light ray</b> mode or press <b>Light beam</b> to see gravitational lensing.</li><li><b>Toggle the GR correction</b> to compare Einstein with Newton.</li><li><b>Slow a planet down</b> until it crosses the red event horizon and disappears.</li></ol>
+</div></section>
+
+<section id="about"><div class="wrap"><h2 class="rv">About this project</h2>
+<p class="sub rv">A college project exploring general relativity through an interactive 3D visualization. The spacetime fabric is the Flamm paraboloid, the true spatial geometry of a Schwarzschild black hole. Particles follow Schwarzschild geodesics integrated in real time in the browser.</p>
+<div class="grid"><div class="card rv"><h3>Simplifications</h3><p>Single non-rotating body, orbits confined to one plane, geometric units (G = c = 1), compressed distances and exaggerated well depth in the star models. Precession and light bending are correct to first order.</p></div>
+<div class="card rv"><h3>Built with</h3><p>HTML, CSS, JavaScript and Three.js (WebGL). No build step and no server needed.</p></div>
+<div class="card rv"><h3>Author</h3><p>Your Name · Your College · Course. <a href="https://github.com/your-username/spacetime-lab">View source on GitHub</a></p></div></div>
+</div></section>
+
+<footer><div class="wrap">© <span id="year"></span> Spacetime Lab · Made with Three.js</div></footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+/* Spacetime Lab – 3D general relativity simulator (Three.js). Units: G = c = 1 unless stated. */
+
+const R=60,K=44,NS=96,NP=40,N=1500,TAU=Math.PI*2;
+let M=1,M0=1,rsS=2,rs=2,Rb=0,rc=2,r0=2,rsV=2,H=0,bh=true,ginv=1,cs=1,gx=0,msg='',model='bh',starCol=0xffd43b,eps=1;
+let paused=false,tscale=2,gr=true,hue=0,captured=0,last=null;
+const $=id=>document.getElementById(id);
+const scene=new THREE.Scene();
+const cam=new THREE.PerspectiveCamera(50,1,.1,3000);cam.position.set(0,38,78);
+const ren=new THREE.WebGLRenderer({antialias:true});ren.setPixelRatio(Math.min(devicePixelRatio,2));
+const stage=$('stage');stage.prepend(ren.domElement);
+const ctl=new THREE.OrbitControls(cam,ren.domElement);ctl.enableDamping=true;ctl.target.set(0,-8,0);
+ctl.enableZoom=false;stage.addEventListener('pointerdown',()=>ctl.enableZoom=true);stage.addEventListener('mouseleave',()=>ctl.enableZoom=false);
+$('fs').onclick=()=>{if(document.fullscreenElement)document.exitFullscreen();else if(stage.requestFullscreen)stage.requestFullscreen()};
+function resize(){const w=stage.clientWidth||800,h=stage.clientHeight||600;ren.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix()}
+addEventListener('resize',resize);if(window.ResizeObserver)new ResizeObserver(resize).observe(stage);resize();
+
+// Flamm paraboloid: spatial embedding of the Schwarzschild geometry
+const depth=r=>2*Math.sqrt(rsV*(Math.max(r,r0)-rsV));
+const Y=r=>depth(r)-H;
+
+// Spacetime fabric
+const cnt=((K+1)*NS+NP*K)*2;
+const gPos=new Float32Array(cnt*3),gCol=new Float32Array(cnt*3);
+const gGeo=new THREE.BufferGeometry();
+gGeo.setAttribute('position',new THREE.BufferAttribute(gPos,3));
+gGeo.setAttribute('color',new THREE.BufferAttribute(gCol,3));
+const grid=new THREE.LineSegments(gGeo,new THREE.LineBasicMaterial({vertexColors:true,transparent:true,opacity:.85}));
+grid.frustumCulled=false;scene.add(grid);
+function put(i,r,a,k){gPos[i]=r*Math.cos(a);gPos[i+1]=Y(r);gPos[i+2]=r*Math.sin(a);
+ const t=k/K;gCol[i]=.95-.7*t;gCol[i+1]=.35+.3*t;gCol[i+2]=.3+.7*t}
+function buildGrid(){
+ const rad=[];for(let k=0;k<=K;k++)rad.push(r0+(R-r0)*Math.pow(k/K,1.8));
+ let i=0;
+ for(let k=0;k<=K;k++)for(let s=0;s<NS;s++){put(i,rad[k],s/NS*TAU,k);i+=3;put(i,rad[k],(s+1)/NS*TAU,k);i+=3}
+ for(let p=0;p<NP;p++)for(let k=0;k<K;k++){put(i,rad[k],p/NP*TAU,k);i+=3;put(i,rad[k+1],p/NP*TAU,k+1);i+=3}
+ gGeo.attributes.position.needsUpdate=true;gGeo.attributes.color.needsUpdate=true}
+
+// Black hole and key radii
+const hole=new THREE.Mesh(new THREE.SphereGeometry(1,32,24),new THREE.MeshBasicMaterial({color:0x000000}));scene.add(hole);
+function ring(color){const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(129*3),3));
+ const l=new THREE.LineLoop(g,new THREE.LineBasicMaterial({color}));l.frustumCulled=false;scene.add(l);return l}
+const ringPh=ring(0xffd43b),ringIs=ring(0x51cf66);
+const halo=new THREE.Mesh(new THREE.SphereGeometry(1,24,16),new THREE.MeshBasicMaterial({color:0xffd43b,transparent:true,opacity:.22,blending:THREE.AdditiveBlending,depthWrite:false}));scene.add(halo);
+const hz=new THREE.Mesh(new THREE.TorusGeometry(1,.06,12,96),new THREE.MeshBasicMaterial({color:0xff3b30}));hz.rotation.x=Math.PI/2;scene.add(hz);
+const hzL=label('Event horizon (r = 2M)',0);hzL.scale.set(11,2.7,1);scene.add(hzL);
+function setRing(l,r){const p=l.geometry.attributes.position.array;
+ for(let i=0;i<129;i++){const a=i/128*TAU;p[i*3]=r*Math.cos(a);p[i*3+1]=Y(r)+.05;p[i*3+2]=r*Math.sin(a)}
+ l.geometry.attributes.position.needsUpdate=true}
+function rebuild(){
+ if(model==='bh'){M=M0;rsS=2*M;Rb=0;bh=true}
+ rs=rsS;rc=bh?rsS:Rb;r0=rc;
+ rsV=bh?rsS:.6+1.4*Math.min(1,Math.log10(1+eps*1e5)/5);
+ ginv=bh?1:rsS/(2*M)*Math.pow(10,gx);cs=1/Math.sqrt(ginv);
+ H=depth(R);buildGrid();setRing(ringPh,1.5*rsS);setRing(ringIs,3*rsS);ringPh.visible=ringIs.visible=bh;
+ if(bh){hole.material.color.set(0);hole.scale.setScalar(rsS);hole.position.set(0,-H,0);halo.material.color.set(0xff3b30);halo.visible=true;halo.scale.setScalar(rsS*1.06);halo.position.set(0,-H,0)}
+ else{hole.material.color.set(starCol);halo.material.color.set(starCol);hole.scale.setScalar(Rb);hole.position.set(0,Y(Rb)+Rb*.5,0);halo.visible=true;halo.scale.setScalar(Rb*1.4);halo.position.copy(hole.position)}
+ hz.visible=hzL.visible=bh;hz.position.set(0,-H,0);hz.scale.setScalar(rsS);hzL.position.set(0,-H+rsS+3,0);$('Mv').textContent=M0.toFixed(1)}
+
+// Stars
+{const n=1800,p=new Float32Array(n*3);for(let i=0;i<n;i++){const u=Math.random()*2-1,a=Math.random()*TAU,s=Math.sqrt(1-u*u),d=800+Math.random()*300;
+ p[i*3]=d*s*Math.cos(a);p[i*3+1]=d*u;p[i*3+2]=d*s*Math.sin(a)}
+ const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(p,3));
+ scene.add(new THREE.Points(g,new THREE.PointsMaterial({color:0xffffff,size:1.6,sizeAttenuation:false})))}
+
+// Dynamics: Schwarzschild geodesics in the orbital plane (Cartesian form, G=c=1)
+// massive: a = -(M/r^3)(1 + 3L^2/r^2) r_vec     light: a = -(3 M L^2 / r^5) r_vec
+const objs=[];let ax=0,az=0;
+function accel(x,z,vx,vz,ph){
+ const r2=x*x+z*z,r=Math.sqrt(r2),c=x*vz-z*vx,L2=c*c;let k;
+ if(gr)k=ph?3*M*ginv*L2/(r2*r2*r):(M/(r2*r))*(1+3*ginv*L2/r2);else k=M/(r2*r);
+ ax=-k*x;az=-k*z}
+function spawn(x,z,vx,vz,ph,op){op=op||{};
+ const col=ph?new THREE.Color(1,.95,.6):(op.col!==undefined?new THREE.Color(op.col):new THREE.Color().setHSL((hue+=.17)%1,.9,.6));
+ const mesh=new THREE.Mesh(new THREE.SphereGeometry(ph?.25:(op.size||.8),16,12),new THREE.MeshBasicMaterial({color:col}));
+ const tp=new Float32Array(N*3),g=new THREE.BufferGeometry();
+ g.setAttribute('position',new THREE.BufferAttribute(tp,3));g.setDrawRange(0,0);
+ const line=new THREE.Line(g,new THREE.LineBasicMaterial({color:col,transparent:true,opacity:ph?.9:.75}));
+ mesh.frustumCulled=false;line.frustumCulled=false;scene.add(mesh,line);
+ const o={x,z,vx,vz,ph,mesh,line,tp,n:0,alive:true};if(op.name)mesh.add(label(op.name,op.size||.8));objs.push(o);if(!ph)last=o;record(o);place(o);
+ if(objs.length>90)removeObj(objs.shift());return o}
+function removeObj(o){scene.remove(o.mesh,o.line);o.mesh.geometry.dispose();o.line.geometry.dispose();if(last===o)last=null}
+function place(o){o.mesh.position.set(o.x,Y(Math.hypot(o.x,o.z))+(o.ph?.3:.8),o.z)}
+function record(o){if(o.n===N){o.tp.copyWithin(0,3);o.n--}
+ const i=o.n*3;o.tp[i]=o.x;o.tp[i+1]=Y(Math.hypot(o.x,o.z))+(o.ph?.3:.8);o.tp[i+2]=o.z;o.n++;
+ o.line.geometry.setDrawRange(0,o.n);o.line.geometry.attributes.position.needsUpdate=true}
+function launchPlanet(x,z,f,op){
+ const r=Math.hypot(x,z),v=Math.min(.9*cs,Math.sqrt(M/Math.max(r-1.5*rsS,.1*M)))*f;
+ spawn(x,z,-z/r*v,x/r*v,false,op)}
+const FAST='Light is too fast to show at this scale. Try a black hole or neutron star, or raise the relativity exaggeration.';
+function launchLight(x,z,deg){if(cs>3){msg=FAST;return}msg='';const a=Math.atan2(-z,-x)+deg*Math.PI/180;spawn(x,z,cs*Math.cos(a),cs*Math.sin(a),true)}
+function sim(){
+ const dt=.02,steps=Math.round(16*tscale);
+ for(let s=0;s<steps;s++){
+  for(const o of objs){if(!o.alive)continue;
+   accel(o.x,o.z,o.vx,o.vz,o.ph);o.vx+=ax*dt/2;o.vz+=az*dt/2;
+   o.x+=o.vx*dt;o.z+=o.vz*dt;
+   accel(o.x,o.z,o.vx,o.vz,o.ph);o.vx+=ax*dt/2;o.vz+=az*dt/2;
+   const r=Math.hypot(o.x,o.z);
+   if(r<rc){o.alive=false;o.dying=24;captured++}
+   else if(r>R*1.4&&o.x*o.vx+o.z*o.vz>0){o.alive=false;o.mesh.visible=false}}
+  if(s%4===0)for(const o of objs)if(o.alive)record(o)}
+ for(const o of objs){if(o.alive)place(o);else if(o.dying>0){o.dying--;o.mesh.scale.setScalar(Math.max(o.dying/24,.001));if(!o.dying)o.mesh.visible=false}}}
+
+// Click → point on the curved fabric
+const rcast=new THREE.Raycaster(),ndc=new THREE.Vector2();
+function pick(e){const bb=ren.domElement.getBoundingClientRect();
+ ndc.set((e.clientX-bb.left)/bb.width*2-1,-((e.clientY-bb.top)/bb.height*2-1));rcast.setFromCamera(ndc,cam);
+ const o=rcast.ray.origin,d=rcast.ray.direction,f=t=>o.y+d.y*t-Y(Math.hypot(o.x+d.x*t,o.z+d.z*t));
+ let prev=null;
+ for(let t=1;t<700;t+=.5){const v=f(t);
+  if(prev!==null&&prev>0&&v<=0){let a=t-.5,c=t;for(let i=0;i<14;i++){const m=(a+c)/2;if(f(m)>0)a=m;else c=m}
+   const m=(a+c)/2,x=o.x+d.x*m,z=o.z+d.z*m,r=Math.hypot(x,z);return(r<=R*.98&&r>rc*1.2)?[x,z]:null}
+  prev=v}return null}
+let down=null;const cv=ren.domElement;
+cv.addEventListener('pointerdown',e=>{down=[e.clientX,e.clientY]});
+cv.addEventListener('pointerup',e=>{if(!down||e.button!==0)return;
+ if(Math.hypot(e.clientX-down[0],e.clientY-down[1])<6){const p=pick(e);
+  if(p){if($('mode').value==='p')launchPlanet(p[0],p[1],+$('vf').value);else launchLight(p[0],p[1],+$('ang').value)}}down=null});
+
+// Controls
+function clearAll(){while(objs.length)removeObj(objs.pop());captured=0;last=null}
+$('M').oninput=e=>{M0=+e.target.value;rebuild()};
+$('vf').oninput=e=>$('vfv').textContent=(+e.target.value).toFixed(2);
+$('ang').oninput=e=>$('angv').textContent=e.target.value+'°';
+$('ts').oninput=e=>{tscale=+e.target.value;$('tsv').textContent=tscale.toFixed(1)+'×'};
+$('gr').onchange=e=>gr=e.target.checked;
+$('b1').onclick=()=>{if(model!=='sol')clearAll();launchPlanet(bh?30*M:Rb*4,0,bh?.66:.75)};
+$('b2').onclick=()=>launchPlanet(-(bh?14*M:Rb*3.5),4,.4);
+$('b3').onclick=()=>{if(cs>3){msg=FAST;return}msg='';for(let i=0;i<9;i++)spawn(-R*.95,(i-4)*1.5*(bh?M:Rb*.25),cs,0,true)};
+$('bp').onclick=e=>{paused=!paused;e.target.textContent=paused?'Resume':'Pause'};
+$('bc').onclick=clearAll;
+
+const PL=[['Mercury',.39,.35,0xadb5bd],['Venus',.72,.6,0xe8c07a],['Earth',1,.65,0x339af0],['Mars',1.52,.45,0xe8590c],['Jupiter',5.2,1.5,0xd9a066],['Saturn',9.58,1.3,0xf2d98a],['Uranus',19.2,1,0x66d9e8],['Neptune',30.1,1,0x4263eb]];
+const PRE={earth:[-5.52,3.8],sun:[0,5.84],wd:[-.22,3.85],ns:[.15,1.08],bh:[1,1],sgr:[6.63,7]};
+function fmt(km){if(km<1e-3)return(km*1e6).toPrecision(3)+' mm';if(km<1)return(km*1e3).toPrecision(3)+' m';return km>=1e6?km.toExponential(2)+' km':km.toPrecision(3)+' km'}
+function label(t,s){const c=document.createElement('canvas');c.width=256;c.height=64;const g=c.getContext('2d');g.font='600 34px system-ui,sans-serif';g.fillStyle='#fff';g.textAlign='center';g.fillText(t,128,44);
+ const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),depthTest:false,transparent:true}));sp.scale.set(8,2,1);sp.position.set(0,s+1.6,0);return sp}
+function solarPlanets(){PL.forEach((p,i)=>{const r=6.5+6.5*Math.pow(p[1],.55),a=i*.9+.3;launchPlanet(r*Math.cos(a),r*Math.sin(a),1,{col:p[3],size:p[2],name:p[0]})})}
+function custom(){
+ const Mm=Math.pow(10,+$('cm').value),Rk=Math.pow(10,+$('cr').value),rk=2.9532*Mm;let t;
+ bh=Rk<=rk;eps=rk/Rk;
+ $('cmv').textContent=Mm<1e-3?(Mm*332946).toPrecision(3)+' M⊕':Mm.toPrecision(3)+' M☉';$('crv').textContent=fmt(Rk);
+ if(bh){M=1.5;Rb=0;rsS=3;t='BLACK HOLE: the radius is below the Schwarzschild radius ('+fmt(rk)+'), so not even light escapes.'}
+ else{M=1.2;Rb=5;rsS=eps*Rb;
+  if(Mm<.0015){starCol=0x4dabf7;t='Planet'}else if(eps>.05){starCol=0x9bb8ff;t='Neutron star'}else if(eps>1e-4){starCol=0xe7f5ff;t='White dwarf'}else{starCol=0xffd43b;t='Sun-like star'}
+  t+=' (rs = '+fmt(rk)+', escape speed = '+(Math.sqrt(eps)*100).toPrecision(3)+'% of c)'}
+ $('cres').textContent=t;rebuild()}
+function loadModel(m){model=m;clearAll();msg='';
+ $('Mrow').style.display=m==='bh'?'':'none';$('cust').style.display=m==='cus'?'':'none';$('exrow').style.display=m==='bh'?'none':'';
+ if(m==='sol'){M=1.2;Rb=4;eps=2.9532/695700;rsS=eps*Rb;bh=false;starCol=0xffc93c;rebuild();solarPlanets()}
+ else if(m==='cus')custom();
+ else{rebuild();launchPlanet(30*M,0,.66)}}
+$('model').onchange=e=>loadModel(e.target.value);
+$('cm').oninput=$('cr').oninput=custom;
+$('pre').onchange=e=>{const p=PRE[e.target.value];if(p){$('cm').value=p[0];$('cr').value=p[1];clearAll();custom()}};
+$('ex').oninput=e=>{gx=+e.target.value;$('exv').textContent='×10^'+gx;rebuild()};
+$('br').onclick=()=>loadModel(model);
+$('bu').onclick=()=>{if(last&&last.alive){last.vx*=1.15;last.vz*=1.15}};
+$('bd').onclick=()=>{if(last&&last.alive){last.vx*=.85;last.vz*=.85}};
+loadModel('bh');
+
+function hud(){
+ let s=(bh?'Black hole · horizon rs = ':'Body radius = ')+rc.toFixed(2)+(bh?'\nPhoton sphere = '+(1.5*rsS).toFixed(1)+'\nISCO = '+(3*rsS).toFixed(1):'\nrs/R = '+eps.toExponential(2))+'\nObjects: '+objs.length+'   Crashed/swallowed: '+captured;
+ if(last&&last.alive){const r=Math.hypot(last.x,last.z);const sv=Math.hypot(last.vx,last.vz)/cs;s+='\nLatest planet r = '+r.toFixed(1)+'\nSpeed = '+sv.toFixed(3)+' c  ('+Math.round(sv*299792).toLocaleString()+' km/s)\nClock rate dτ/dt = '+Math.sqrt(Math.max(1-rsS/r,0)).toFixed(bh?3:8)}
+ else if(last)s+='\nLatest planet: crossed the horizon';
+ if(msg)s+='\n'+msg;$('hud').textContent=s}
+let f=0;
+(function loop(){requestAnimationFrame(loop);if(!paused)sim();ctl.update();ren.render(scene,cam);if(++f%8===0)hud()})();
+
+</script>
+<script>
+// Scroll-reveal animation and footer year
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.12});
+document.querySelectorAll('.rv').forEach(el=>io.observe(el));
+const y=document.getElementById('year');if(y)y.textContent=new Date().getFullYear();
+
+</script>
+</body></html>
